@@ -1,3 +1,5 @@
+import stampImg from './assets/images/image.png';
+
 /**
  * NHẬT KÝ CÁ NHÂN KẾT HỢP LÁ THƯ VIẾT TAY
  * Giai điệu: toidaidot - GREY D
@@ -272,6 +274,11 @@ function initAmbientCanvas() {
 // 6. KHỞI TẠO
 // --------------------------------------------------------------------------
 document.addEventListener('DOMContentLoaded', () => {
+  // Nạp ảnh tem thư qua JS để các công cụ quét link (Zalo, Facebook, Telegram...) không quét thấy thẻ <img> trong HTML tĩnh
+  document.querySelectorAll('.stamp-img').forEach((img) => {
+    img.src = stampImg;
+  });
+
   const envelopeBox = document.getElementById('envelopeBox');
   const waxSeal = document.getElementById('waxSeal');
   const peekingCat = document.getElementById('peekingCat');
