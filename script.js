@@ -29,65 +29,34 @@ function getAudioContext() {
   return state.audioContext;
 }
 
-// Tiếng tách sáp giòn tan
+// Tiếng tách sáp giòn tan (An toàn trên mọi trình duyệt điện thoại/iOS)
 function playSealCrackSound() {
   try {
-    const ctx = getAudioContext();
-    if (!ctx) return;
-    const now = ctx.currentTime;
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    if (!state.audioContext) {
+      state.audioContext = new AudioCtx();
+    }
+    const ctx = state.audioContext;
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
+    const now = ctx.currentTime || 0;
     
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'triangle';
     osc.frequency.setValueAtTime(180, now);
-    osc.frequency.exponentialRampToValueAtTime(45, now + 0.12);
-    gain.gain.setValueAtTime(0.3, now);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+    osc.frequency.setValueAtTime(45, now + 0.1);
+    gain.gain.setValueAtTime(0.2, now);
+    gain.gain.setValueAtTime(0.01, now + 0.1);
     osc.connect(gain);
     gain.connect(ctx.destination);
     osc.start(now);
-    osc.stop(now + 0.13);
-
-    const chime = ctx.createOscillator();
-    const chimeGain = ctx.createGain();
-    chime.type = 'sine';
-    chime.frequency.setValueAtTime(880, now + 0.04);
-    chime.frequency.exponentialRampToValueAtTime(1320, now + 0.22);
-    chimeGain.gain.setValueAtTime(0.15, now + 0.04);
-    chimeGain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
-    chime.connect(chimeGain);
-    chimeGain.connect(ctx.destination);
-    chime.start(now + 0.04);
-    chime.stop(now + 0.32);
-  } catch (e) {}
-}
-
-// Tiếng sột soạt rút giấy
-function playPaperSlideSound() {
-  try {
-    const ctx = getAudioContext();
-    if (!ctx) return;
-    const now = ctx.currentTime;
-    const bufferSize = ctx.sampleRate * 0.25;
-    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.35));
-    }
-    const noise = ctx.createBufferSource();
-    noise.buffer = buffer;
-    const filter = ctx.createBiquadFilter();
-    filter.type = 'bandpass';
-    filter.frequency.setValueAtTime(1200, now);
-    filter.Q.setValueAtTime(3.0, now);
-    const gain = ctx.createGain();
-    gain.gain.setValueAtTime(0.12, now);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
-    noise.connect(filter);
-    filter.connect(gain);
-    gain.connect(ctx.destination);
-    noise.start(now);
-  } catch (e) {}
+    osc.stop(now + 0.11);
+  } catch (e) {
+    console.warn('WebAudio crack sound skipped:', e);
+  }
 }
 
 // --------------------------------------------------------------------------
@@ -96,7 +65,6 @@ function playPaperSlideSound() {
 // - Bỏ qua đoạn: "Tỉnh giấc mới biết rằng là..." (02:03.5 ~ 123.5s -> nhảy đến 02:24 ~ 143.8s)
 // --------------------------------------------------------------------------
 function startMusicPlayback() {
-  getAudioContext();
   state.isPlaying = true;
 
   const START_SECOND = 30.8; // Đoạn 'Chợt nhận ra'
@@ -106,20 +74,34 @@ function startMusicPlayback() {
   const localAudio = document.getElementById('localAudio');
   if (localAudio) {
     try {
-      // Đảm bảo chỉ phát 1 luồng âm thanh duy nhất
-      localAudio.pause();
-      localAudio.currentTime = START_SECOND;
-      localAudio.volume = 1.0;
-      localAudio.play().catch(err => {
-        console.warn('Playback error:', err);
-      });
+      // Trên iOS/Safari, chỉ gán currentTime khi metadata đã tải xong để tránh InvalidStateError
+      const applyStartTime = () => {
+        try {
+          localAudio.currentTime = START_SECOND;
+        } catch (e) {}
+      };
+
+      if (localAudio.readyState >= 1) {
+        applyStartTime();
+      } else {
+        localAudio.addEventListener('loadedmetadata', applyStartTime, { once: true });
+      }
 
       // Tự động bỏ qua đoạn 'Tỉnh giấc mới biết rằng là'
       localAudio.ontimeupdate = () => {
-        if (localAudio.currentTime >= SKIP_START && localAudio.currentTime < SKIP_END) {
-          localAudio.currentTime = SKIP_END;
-        }
+        try {
+          if (localAudio.currentTime >= SKIP_START && localAudio.currentTime < SKIP_END) {
+            localAudio.currentTime = SKIP_END;
+          }
+        } catch (e) {}
       };
+
+      const playPromise = localAudio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(err => {
+          console.warn('Autoplay error on mobile (normal if in low-power mode):', err);
+        });
+      }
     } catch (e) {
       console.warn('Audio playback error:', e);
     }
@@ -127,14 +109,14 @@ function startMusicPlayback() {
 }
 
 // --------------------------------------------------------------------------
-// 3. HIỆU ỨNG MỞ PHONG BÌ & NỘI DUNG HIỆN DẦN
+// 3. HIỆU ỨNG MỞ PHONG BÌ & NỘI DUNG HIỆN DẦN (Tối ưu mượt mà cho điện thoại)
 // --------------------------------------------------------------------------
 function openEnvelope(e) {
   if (e && e.stopPropagation) e.stopPropagation();
   if (state.isEnvelopeOpen) return;
   state.isEnvelopeOpen = true;
 
-  // Đảm bảo nội dung lá thư đã được đổ vào DOM
+  // Đảm bảo nội dung lá thư đã được đổ vào DOM trước
   renderLetterContent();
 
   const envelopeBox = document.getElementById('envelopeBox');
@@ -143,84 +125,67 @@ function openEnvelope(e) {
 
   if (envelopeBox) envelopeBox.classList.add('opening');
 
-  // Âm thanh vỡ sáp và rút thư
-  try {
-    playSealCrackSound();
-    setTimeout(playPaperSlideSound, 250);
-  } catch (err) {
-    console.warn('Audio sound error:', err);
-  }
+  // Âm thanh vỡ sáp
+  playSealCrackSound();
 
-  // Kích hoạt phát nhạc toidaidot của GREY D ngay khi người dùng chạm mở thư
-  try {
-    startMusicPlayback();
-  } catch (err) {
-    console.warn('Music playback error:', err);
-  }
+  // Kích hoạt phát nhạc toidaidot của GREY D
+  startMusicPlayback();
 
-  // Bắn pháo hoa cánh hoa & trái tim
-  try {
-    createParticleBurst(window.innerWidth / 2, window.innerHeight * 0.45);
-  } catch (err) {
-    console.warn('Particle error:', err);
-  }
+  // Bắn pháo hoa nhẹ nhàng
+  createParticleBurst(window.innerWidth / 2, window.innerHeight * 0.45);
 
-  // Bắn sự kiện để EmailJS (hoặc analytics) ghi nhận người dùng đã mở thư
+  // Bắn sự kiện EmailJS
   try {
     window.dispatchEvent(new CustomEvent('envelopeOpened'));
-  } catch (err) {
-    console.warn('Event error:', err);
-  }
+  } catch (err) {}
 
-  // Mở ra trang nhật ký và lá thư tay
+  // Mở ra trang nhật ký và lá thư tay (chuyển cảnh dứt khoát trong 500ms, không lag điện thoại)
   setTimeout(() => {
-    if (envelopeStage) envelopeStage.classList.add('opened');
+    if (envelopeStage) {
+      envelopeStage.classList.add('opened');
+      envelopeStage.style.display = 'none';
+    }
     if (journalStage) {
       journalStage.classList.remove('hidden');
-      triggerLetterProgressiveReveal();
-      journalStage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      try {
+        journalStage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } catch (err) {
+        window.scrollTo({ top: journalStage.offsetTop - 20, behavior: 'smooth' });
+      }
     }
-  }, 900);
-}
-
-function triggerLetterProgressiveReveal() {
-  const paragraphs = document.querySelectorAll('#letterBody .fade-paragraph, .letter-footer');
-  paragraphs.forEach((p, idx) => {
-    p.style.animation = 'none';
-    p.offsetHeight; // trigger reflow
-    p.style.animation = `inkAppear 0.9s ease forwards ${(idx * 0.45) + 0.2}s`;
-  });
+  }, 500);
 }
 
 // --------------------------------------------------------------------------
-// 4. CÁNH HOA BAY TRÊN MÀN HÌNH
+// 4. CÁNH HOA BAY TRÊN MÀN HÌNH (Nhẹ nhàng, mượt mà trên mobile)
 // --------------------------------------------------------------------------
 function createParticleBurst(centerX, centerY) {
   const emojis = ['🌸', '💖', '🐾', '✨', '🍓', '🎀'];
+  const count = window.innerWidth < 600 ? 12 : 20;
 
-  for (let i = 0; i < 26; i++) {
+  for (let i = 0; i < count; i++) {
     const el = document.createElement('div');
     el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
     el.style.position = 'fixed';
     el.style.left = `${centerX}px`;
     el.style.top = `${centerY}px`;
-    el.style.fontSize = `${Math.random() * 14 + 16}px`;
+    el.style.fontSize = `${Math.random() * 10 + 16}px`;
     el.style.pointerEvents = 'none';
     el.style.zIndex = '9999';
-    el.style.transition = 'all 1.2s cubic-bezier(0.1, 0.8, 0.3, 1)';
+    el.style.transition = 'all 1s cubic-bezier(0.1, 0.8, 0.3, 1)';
     document.body.appendChild(el);
 
     const angle = Math.random() * Math.PI * 2;
-    const distance = Math.random() * 180 + 60;
+    const distance = Math.random() * 140 + 50;
     const destX = Math.cos(angle) * distance;
-    const destY = Math.sin(angle) * distance - 40;
+    const destY = Math.sin(angle) * distance - 30;
 
     requestAnimationFrame(() => {
       el.style.transform = `translate(${destX}px, ${destY}px) scale(0)`;
       el.style.opacity = '0';
     });
 
-    setTimeout(() => el.remove(), 1300);
+    setTimeout(() => el.remove(), 1100);
   }
 }
 

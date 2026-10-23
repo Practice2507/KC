@@ -547,17 +547,9 @@ body {
 }
 
 .fade-paragraph {
-  opacity: 0;
-  transform: translateY(12px);
-  animation: inkAppear 0.9s ease forwards;
+  opacity: 1;
   margin-bottom: 1.4rem;
 }
-
-.delay-1 { animation-delay: 0.2s; }
-.delay-2 { animation-delay: 0.8s; }
-.delay-3 { animation-delay: 1.5s; }
-.delay-4 { animation-delay: 2.2s; }
-.delay-5 { animation-delay: 2.9s; }
 
 @keyframes inkAppear {
   0% {
