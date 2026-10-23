@@ -271,9 +271,54 @@ function initAmbientCanvas() {
 }
 
 // --------------------------------------------------------------------------
+// NỘI DUNG LÁ THƯ (Được lưu trong JS để tránh bị bot quét trộm vào link preview)
+// --------------------------------------------------------------------------
+const LETTER_DATA = {
+  salutation: 'Gửi em,',
+  signature: 'TNNH',
+  paragraphs: [
+    { text: 'Sau thời gian qua, anh đã nghiêm túc nhìn lại mối quan hệ của mình.', delay: 'delay-1' },
+    { text: 'Anh biết em đã cho anh nhiều cơ hội, và anh đã không trân trọng nó. Mỗi lần xin lỗi rồi lặp lại dần làm em mất niềm tin. Anh hiểu vì sao em nghĩ anh khó thay đổi.', delay: 'delay-2' },
+    { text: 'Anh để cảm xúc nhất thời lấn át lý trí, anh nói những lời khó nghe làm em cảm thấy mình không được coi trọng. Anh muốn em biết rằng đó không phải cách anh nhìn về em, cũng không phải những gì anh thật lòng nghĩ về em.', delay: 'delay-3' },
+    { text: 'Em đã rất áp lực khi ở bên anh. Những lần cãi nhau, anh không giải quyết được trọn vẹn nên mọi thứ tích tu dần khiến em kiệt sức. Anh cũng đã bỏ qua cảm xúc của em.', delay: 'delay-4' },
+    { text: 'Anh nhận ra có những lúc em cần được lắng nghe, nhưng anh chỉ dỗ dành qua loa. Khi em buồn hay tức giận, anh đã có lúc chọn im lặng thay vì cố gắng hiểu điều gì đang khiến em tổn thương.', delay: 'delay-4' },
+    { text: 'Anh hiểu em lo lắng những chuyện cũ sẽ lặp lại.', delay: 'delay-4' },
+    { text: 'Anh xin lỗi vì những tổn thương, những lần anh chưa đủ trưởng thành. Anh biết xin lỗi không lập tức lấy lại được niềm tin đã mất.', delay: 'delay-5' },
+    { text: 'Em giúp anh nhận ra rằng tình yêu lớn thôi chưa đủ, mà còn phải học cách thấu hiểu, lắng nghe, tôn trọng cảm xúc của em. Yêu em không chỉ là muốn ở bên em, mà còn biết cách đối xử với em bằng sự dịu dàng.', delay: 'delay-6' },
+    { text: 'Anh cũng đã và đang học cách bình tĩnh, biết lắng nghe, quan tâm và chịu trách nhiệm cho hành động và lời nói của mình. Anh sẽ nghiêm túc sửa đổi bản thân và để hành động chứng minh điều anh nói.', delay: 'delay-7' },
+    { text: 'Anh rất yêu mindset của em, sở thích, tính cách và sự hiểu chuyện mà em đã dành cho anh. Em ở bên anh những lúc anh mệt mỏi, áp lực, khó khăn. Anh biết điều đó không hề dễ dàng chút nào.', delay: 'delay-8' },
+    { text: 'Anh vẫn luôn mong mình có thể tiếp tục đồng hành cùng em, cố gắng trong học tập, phát triển sự nghiệp và tương lai cả hai từng mong muốn.', delay: 'delay-9' },
+    { text: 'Và anh cũng mong rằng những lúc em mệt mỏi, buồn bã, mất đi động lực, anh có thể là người em tin tưởng và cho em một chỗ dựa khi em cần.', delay: 'delay-9' },
+    { text: 'Một ngày nào đó nếu em còn mong muốn và cảm thấy anh đã thực sự thay đổi, anh mong mình có cơ hội bắt đầu lại cùng em. Không để tuột mất em một lần nào nữa!', delay: 'delay-10' }
+  ]
+};
+
+function renderLetterContent() {
+  const salutation = document.getElementById('letterSalutation');
+  if (salutation) {
+    salutation.textContent = LETTER_DATA.salutation;
+  }
+
+  const letterBody = document.getElementById('letterBody');
+  if (letterBody) {
+    letterBody.innerHTML = LETTER_DATA.paragraphs
+      .map(p => `<p class="fade-paragraph ${p.delay}">${p.text}</p>`)
+      .join('\n');
+  }
+
+  const sig = document.getElementById('signatureText');
+  if (sig) {
+    sig.textContent = LETTER_DATA.signature;
+  }
+}
+
+// --------------------------------------------------------------------------
 // 6. KHỞI TẠO
 // --------------------------------------------------------------------------
 document.addEventListener('DOMContentLoaded', () => {
+  // Nạp nội dung bức thư bằng JavaScript
+  renderLetterContent();
+
   // Nạp ảnh tem thư qua JS để các công cụ quét link (Zalo, Facebook, Telegram...) không quét thấy thẻ <img> trong HTML tĩnh
   document.querySelectorAll('.stamp-img').forEach((img) => {
     img.src = stampImg;
