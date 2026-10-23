@@ -72,74 +72,98 @@ function startMusicPlayback() {
   const SKIP_END = 143.8;     // Nhảy sang điệp khúc 'Ngày hôm ấy đã quá ngốc'
 
   const localAudio = document.getElementById('localAudio');
-  if (localAudio) {
-    try {
-      // Trên iOS/Safari, chỉ gán currentTime khi metadata đã tải xong để tránh InvalidStateError
-      const applyStartTime = () => {
-        try {
-          localAudio.currentTime = START_SECOND;
-        } catch (e) {}
-      };
+  if (!localAudio) return;
 
-      if (localAudio.readyState >= 1) {
-        applyStartTime();
-      } else {
-        localAudio.addEventListener('loadedmetadata', applyStartTime, { once: true });
+  try {
+    localAudio.muted = false;
+
+    const applyStartTimeAndPlay = () => {
+      try {
+        localAudio.currentTime = START_SECOND;
+      } catch (e) {}
+      const p = localAudio.play();
+      if (p !== undefined) {
+        p.catch(err => console.warn('Audio playback notice:', err));
       }
+    };
 
-      // Tự động bỏ qua đoạn 'Tỉnh giấc mới biết rằng là'
-      localAudio.ontimeupdate = () => {
-        try {
-          if (localAudio.currentTime >= SKIP_START && localAudio.currentTime < SKIP_END) {
-            localAudio.currentTime = SKIP_END;
-          }
-        } catch (e) {}
-      };
-
-      const playPromise = localAudio.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(err => {
-          console.warn('Autoplay error on mobile (normal if in low-power mode):', err);
-        });
+    if (localAudio.readyState >= 1) {
+      applyStartTimeAndPlay();
+    } else {
+      localAudio.addEventListener('loadedmetadata', applyStartTimeAndPlay, { once: true });
+      // Thử phát ngay nếu trình duyệt đã đệm
+      const p = localAudio.play();
+      if (p !== undefined) {
+        p.then(() => {
+          try {
+            localAudio.currentTime = START_SECOND;
+          } catch (e) {}
+        }).catch(err => console.warn('Audio playback notice:', err));
       }
-    } catch (e) {
-      console.warn('Audio playback error:', e);
     }
+
+    // Tự động bỏ qua đoạn 'Tỉnh giấc mới biết rằng là'
+    localAudio.ontimeupdate = () => {
+      try {
+        if (localAudio.currentTime >= SKIP_START && localAudio.currentTime < SKIP_END) {
+          localAudio.currentTime = SKIP_END;
+        }
+      } catch (e) {}
+    };
+  } catch (e) {
+    console.warn('Audio playback error:', e);
   }
 }
 
 // --------------------------------------------------------------------------
-// 3. HIỆU ỨNG MỞ PHONG BÌ & NỘI DUNG HIỆN DẦN (Tối ưu mượt mà cho điện thoại)
+// 3. HIỆU ỨNG MỞ PHONG BÌ & NỘI DUNG HIỆN DẦN
 // --------------------------------------------------------------------------
 function openEnvelope(e) {
   if (e && e.stopPropagation) e.stopPropagation();
   if (state.isEnvelopeOpen) return;
   state.isEnvelopeOpen = true;
 
-  // Đảm bảo nội dung lá thư đã được đổ vào DOM trước
+  // 1. Đảm bảo nội dung lá thư đã được đổ vào DOM trước
   renderLetterContent();
 
   const envelopeBox = document.getElementById('envelopeBox');
   const envelopeStage = document.getElementById('envelopeStage');
   const journalStage = document.getElementById('journalStage');
+  const localAudio = document.getElementById('localAudio');
 
-  if (envelopeBox) envelopeBox.classList.add('opening');
+  // 2. Mở khóa âm thanh (Unlock Audio) ngay trong thao tác click của người dùng để tránh bị trình duyệt chặn phát trễ
+  if (localAudio) {
+    try {
+      localAudio.muted = true;
+      const unlockPromise = localAudio.play();
+      if (unlockPromise !== undefined) {
+        unlockPromise.then(() => {
+          localAudio.pause();
+          localAudio.muted = false;
+        }).catch(() => {
+          localAudio.muted = false;
+        });
+      }
+    } catch (err) {}
+  }
 
-  // Âm thanh vỡ sáp
+  // 3. Hiệu ứng mở nắp phong bì 3D
+  if (envelopeBox) {
+    envelopeBox.classList.add('opening');
+  }
+
+  // 4. Âm thanh vỡ sáp
   playSealCrackSound();
 
-  // Kích hoạt phát nhạc toidaidot của GREY D
-  startMusicPlayback();
-
-  // Bắn pháo hoa nhẹ nhàng
+  // 5. Bắn pháo hoa nhẹ nhàng
   createParticleBurst(window.innerWidth / 2, window.innerHeight * 0.45);
 
-  // Bắn sự kiện EmailJS
+  // 6. Bắn sự kiện EmailJS
   try {
     window.dispatchEvent(new CustomEvent('envelopeOpened'));
   } catch (err) {}
 
-  // Mở ra trang nhật ký và lá thư tay (chuyển cảnh dứt khoát trong 500ms, không lag điện thoại)
+  // 7. Đúng 800ms sau khi nắp phong bì mở xong: Hiện lá thư viết tay
   setTimeout(() => {
     if (envelopeStage) {
       envelopeStage.classList.add('opened');
@@ -150,10 +174,15 @@ function openEnvelope(e) {
       try {
         journalStage.scrollIntoView({ behavior: 'smooth', block: 'start' });
       } catch (err) {
-        window.scrollTo({ top: journalStage.offsetTop - 20, behavior: 'smooth' });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }
-  }, 500);
+  }, 800);
+
+  // 8. ĐÚNG 1 GIÂY (1000ms) SAU KHI MỞ THƯ: BẮT ĐẦU PHÁT NHẠC
+  setTimeout(() => {
+    startMusicPlayback();
+  }, 1000);
 }
 
 // --------------------------------------------------------------------------
@@ -315,6 +344,10 @@ function init() {
 
   if (envelopeBox) {
     envelopeBox.onclick = openEnvelope;
+    envelopeBox.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      openEnvelope(e);
+    }, { passive: false });
   }
 
   if (waxSeal) {
@@ -322,6 +355,11 @@ function init() {
       e.stopPropagation();
       openEnvelope(e);
     };
+    waxSeal.addEventListener('touchend', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      openEnvelope(e);
+    }, { passive: false });
   }
 
   if (peekingCat) {
