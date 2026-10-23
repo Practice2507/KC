@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tâm thư</title>
+  <meta name="description" content="Trang nhật ký cá nhân kết hợp thư viết tay với phong cách hồng phấn trắng kem, hiệu ứng mở phong bì nhẹ nhàng và bài hát toidaidot của GREY D.">
+  
+  <!-- Google Fonts: Font chữ bình thường, rõ ràng, dễ đọc cho tiếng Việt -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Ambient Background Canvas for floating sakura petals & sparkles -->
+  <canvas id="ambientCanvas"></canvas>
+
+  <!-- Audio Player: Sử dụng duy nhất 1 nguồn audio chất lượng cao, loại bỏ hoàn toàn tiếng vọng -->
+  <audio id="localAudio" src="assets/audio/toidaidot.webm" preload="auto"></audio>
+
+  <!-- Main Container -->
+  <main class="scene-container">
+
+    <!-- Hero Header / Floating Greeting -->
+    <header class="gentle-header" id="gentleHeader">
+      <div class="cat-badge">
+        <span>Lời tớ muốn nói</span>
+      </div>
+    </header>
+
+    <!-- SECTION 1: THE INTERACTIVE ENVELOPE (Phong bì thư 3D) -->
+    <section class="envelope-stage" id="envelopeStage">
+      <!-- 3D Envelope Box -->
+      <div class="envelope-box" id="envelopeBox" role="button" tabindex="0" aria-label="Phong bì thư, bấm để mở">
+        <!-- Envelope Back Face -->
+        <div class="env-back">
+          <div class="env-interior-pattern"></div>
+        </div>
+
+        <!-- The Letter Sheet nestled inside envelope -->
+        <div class="env-letter-peek" id="envLetterPeek">
+          <div class="peek-stamp">
+            <img src="assets/images/image.png" alt="Tem thư">
+          </div>
+          <div class="peek-lines">
+            <div class="line l1"></div>
+            <div class="line l2"></div>
+            <div class="line l3"></div>
+          </div>
+          <div class="peek-hint"></div>
+        </div>
+
+        <!-- Envelope Folded Pockets (Bottom, Left, Right) -->
+        <div class="env-pocket-left"></div>
+        <div class="env-pocket-right"></div>
+        <div class="env-pocket-bottom"></div>
+
+        <!-- Envelope Top Flap (Lid) with 3D Flip -->
+        <div class="env-flap" id="envFlap">
+          <!-- Flap interior when opened -->
+          <div class="flap-interior"></div>
+          <!-- Flap exterior facing user before open -->
+          <div class="flap-exterior"></div>
+
+          <!-- Wax Seal positioned at flap vertex -->
+          <div class="wax-seal" id="waxSeal" title="Mở thư">
+            <div class="wax-seal-inner">
+              <span class="seal-text">OPEN</span>
+            </div>
+            <div class="seal-glow"></div>
+            <div class="seal-ribbon"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 2: THE REVEALED DIARY & HANDWRITTEN LETTER -->
+    <section class="journal-stage hidden" id="journalStage">
+      
+      <div class="journal-book" id="journalBook">
+
+        <!-- LÁ THƯ VIẾT TAY TRÊN NỀN GIẤY KẺ Ô TRẮNG KEM -->
+        <article class="letter-paper">
+          <!-- Washi Tape Decors -->
+          <div class="washi-tape tape-top-left"></div>
+          <div class="washi-tape tape-top-right"></div>
+
+          <div class="letter-header-meta">
+            <div></div>
+            <div class="letter-vintage-stamp">
+              <img src="assets/images/image.png" alt="Con tem kỷ niệm">
+              <div class="stamp-edges"></div>
+            </div>
+          </div>
+
+          <!-- Recipient Salutation -->
+          <div class="letter-salutation" id="letterSalutation">
+            Gửi em,
+          </div>
+
+          <!-- Letter Body (Font chữ bình thường, dễ đọc, lời bài hát đến Ngày hôm ấy đã quá ngốc) -->
+          <div class="letter-body" id="letterBody">
+            <p class="fade-paragraph delay-1">
+              Sau thời gian qua, anh đã nghiêm túc nhìn lại mối quan hệ của mình.
+            </p>
+            <p class="fade-paragraph delay-2">
+             Anh biết em đã cho anh nhiều cơ hội, và anh đã không trân trọng nó. Mỗi lần xin lỗi rồi lặp lại dần làm em mất niềm tin. Anh hiểu vì sao em nghĩ anh khó thay đổi.
+            </p>
+            <p class="fade-paragraph delay-3">
+             Anh để cảm xúc nhất thời lấn át lý trí, anh nói những lời khó nghe làm em cảm thấy mình không được coi trọng. Anh muốn em biết rằng đó không phải cách anh nhìn về em, cũng không phải những gì anh thật lòng nghĩ về em.
+            </p>
+            <p class="fade-paragraph delay-4">
+             Em đã rất áp lực khi ở bên anh. Những lần cãi nhau, anh không giải quyết được trọn vẹn nên mọi thứ tích tu dần khiến em kiệt sức. Anh cũng đã bỏ qua cảm xúc và không chịu lắng nghe em.
+            </p>
+            
+            <p class="fade-paragraph delay-5">
+             Anh xin lỗi vì sự thiếu trường thành của mình. Anh biết xin lỗi không lập tức lấy lại được niềm tin đã mất.
+            </p>
+            <p class="fade-paragraph delay-6">
+             Em giúp anh nhận ra rằng tình yêu lớn thôi chưa đủ, mà còn phải học cách thấu hiểu, lắng nghe, tôn trọng cảm xúc của em. Yêu em không chỉ là muốn ở bên em, mà còn biết cách đối xử với em bằng sự dịu dàng, ngay cả trong những lúc bản thân không vui.
+            </p>
+
+            <p class="fade-paragraph delay-7">
+             Anh cũng đã và đang học cách bình tĩnh, biết lắng nghe, quan tâm và chịu trách nhiệm cho hành động và lời nói của mình.
+             </p>
+            <p class="fade-paragraph delay-8">
+             Anh rất yêu mindset của em, sở thích, tính cách và sự hiểu chuyện mà em đã dành cho anh. Em ở bên anh những lúc anh mệt mỏi, áp lực, khó khăn. Anh biết điều đó không hề dễ dàng chút nào.
+             </p>
+             <p class="fade-paragraph delay-9">
+              Một ngày nào đó em muốn nghe một lời giải thích đàng hoàng, anh luôn ở đây và sẵn sàng hành động, anh sẽ yêu thương và quan tâm em nhiều hơn nữa. Bởi vì anh tin đây là bước ngoặt của tình yêu trưởng thành và tiến xa hơn mới thật sự bắt đầu.
+            </p>
+            <p class="fade-paragraph delay-10">
+              Một ngày nào đó nếu anh thật sự có cơ hội, anh nhất định sẽ nắm tay em thật chặt và không để em tuột khỏi tay anh! Anh sẽ xuất hiện tranh giành việc yêu thương em với chính bản thân em.
+            </p>
+
+            
+           
+            
+          </div>
+
+          <!-- Signature -->
+          <div class="letter-footer fade-paragraph delay-5">
+            
+            <div class="letter-signature-box">
+              
+              <span class="sign-handwritten" id="signatureText">TNNH</span>
+            </div>
+          </div>
+        </article>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Scripts -->
+  <!-- Thư viện EmailJS chính thức từ CDN -->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+  <script type="module" src="./script.js"></script>
+
+  <script>
+    // =========================================================================
+    // CẤU HÌNH EMAILJS - ĐIỀN THÔNG TIN CỦA BẠN VÀO ĐÂY
+    // =========================================================================
+    const EMAILJS_CONFIG = {
+      publicKey: "Y2VRj7CWQKfFaPEZ_",       // Điền Public Key của bạn vào đây
+      serviceId: "service_gi70snv",        // Điền Service ID của bạn vào đây
+      templateId: "template_stkadco",      // Điền Template ID của bạn vào đây
+    };
+
+    // Hàm gửi email thông báo
+    function sendVisitorNotification(actionName = "Có người vừa nhấn vào liên kết!") {
+      // Kiểm tra nếu chưa load được thư viện EmailJS
+      if (typeof emailjs === "undefined") {
+        console.warn("EmailJS SDK chưa được tải xong.");
+        return;
+      }
+
+      // Khởi tạo EmailJS với Public Key
+      emailjs.init({
+        publicKey: EMAILJS_CONFIG.publicKey,
+      });
+
+      // Lấy thời gian hiện tại theo múi giờ Việt Nam
+      const now = new Date();
+      const timeString = now.toLocaleString("vi-VN", {
+        timeZone: "Asia/Ho_Chi_Minh",
+        hour12: false,
+      });
+
+      // Các thông số truyền vào Template của EmailJS
+      // Bạn có thể dùng {{time}}, {{message}}, {{device}}, {{screen}}, {{url}} trong Email Template
+      const templateParams = {
+        message: actionName,
+        time: timeString,
+        device: navigator.userAgent,
+        screen: `${window.screen.width}x${window.screen.height}`,
+        url: window.location.href,
+      };
+
+      // Gửi email
+      emailjs
+        .send(EMAILJS_CONFIG.serviceId, EMAILJS_CONFIG.templateId, templateParams)
+        .then(function (response) {
+          console.log("✅ Đã gửi email thông báo thành công!", response.status, response.text);
+        })
+        .catch(function (error) {
+          console.error("❌ Gửi email thông báo thất bại:", error);
+        });
+    }
+
+    // 1. Tự động gửi thông báo ngay khi có người mở link trang web
+    window.addEventListener("load", function () {
+      // Dùng sessionStorage để tránh gửi liên tục khi người đó bấm F5 tải lại trang trong cùng 1 lần xem
+      const hasNotified = sessionStorage.getItem("notified_link_click");
+      if (!hasNotified) {
+        sendVisitorNotification("Có người vừa bấm vào đường link trang web!");
+        sessionStorage.setItem("notified_link_click", "true");
+      }
+    });
+
+    // 2. Lắng nghe thêm sự kiện khi người đó bấm mở phong bì thư (tùy chọn)
+    window.addEventListener("envelopeOpened", function () {
+      const hasNotifiedEnvelope = sessionStorage.getItem("notified_envelope_open");
+      if (!hasNotifiedEnvelope) {
+        sendVisitorNotification("Người nhận đã bấm mở phong bì thư để đọc!");
+        sessionStorage.setItem("notified_envelope_open", "true");
+      }
+    });
+  </script>
+</body>
+</html>
