@@ -45,7 +45,7 @@
     <!-- SECTION 1: THE INTERACTIVE ENVELOPE (Phong bì thư 3D) -->
     <section class="envelope-stage" id="envelopeStage">
       <!-- 3D Envelope Box -->
-      <div class="envelope-box" id="envelopeBox" role="button" tabindex="0" aria-label="Phong bì thư, bấm để mở">
+      <div class="envelope-box" id="envelopeBox" role="button" tabindex="0" aria-label="Phong bì thư, bấm để mở" onclick="window.openEnvelope && window.openEnvelope(event)">
         <!-- Envelope Back Face -->
         <div class="env-back">
           <div class="env-interior-pattern"></div>
@@ -77,7 +77,7 @@
           <div class="flap-exterior"></div>
 
           <!-- Wax Seal positioned at flap vertex -->
-          <div class="wax-seal" id="waxSeal" title="Mở thư">
+          <div class="wax-seal" id="waxSeal" title="Mở thư" onclick="event.stopPropagation(); window.openEnvelope && window.openEnvelope(event)">
             <div class="wax-seal-inner">
               <span class="seal-text">OPEN</span>
             </div>

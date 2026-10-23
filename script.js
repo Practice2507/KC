@@ -129,13 +129,13 @@ function startMusicPlayback() {
 // --------------------------------------------------------------------------
 // 3. HIỆU ỨNG MỞ PHONG BÌ & NỘI DUNG HIỆN DẦN
 // --------------------------------------------------------------------------
-function openEnvelope() {
+function openEnvelope(e) {
+  if (e && e.stopPropagation) e.stopPropagation();
   if (state.isEnvelopeOpen) return;
   state.isEnvelopeOpen = true;
 
-  // Âm thanh vỡ sáp và rút thư
-  playSealCrackSound();
-  setTimeout(playPaperSlideSound, 250);
+  // Đảm bảo nội dung lá thư đã được đổ vào DOM
+  renderLetterContent();
 
   const envelopeBox = document.getElementById('envelopeBox');
   const envelopeStage = document.getElementById('envelopeStage');
@@ -143,14 +143,34 @@ function openEnvelope() {
 
   if (envelopeBox) envelopeBox.classList.add('opening');
 
+  // Âm thanh vỡ sáp và rút thư
+  try {
+    playSealCrackSound();
+    setTimeout(playPaperSlideSound, 250);
+  } catch (err) {
+    console.warn('Audio sound error:', err);
+  }
+
   // Kích hoạt phát nhạc toidaidot của GREY D ngay khi người dùng chạm mở thư
-  startMusicPlayback();
+  try {
+    startMusicPlayback();
+  } catch (err) {
+    console.warn('Music playback error:', err);
+  }
 
   // Bắn pháo hoa cánh hoa & trái tim
-  createParticleBurst(window.innerWidth / 2, window.innerHeight * 0.45);
+  try {
+    createParticleBurst(window.innerWidth / 2, window.innerHeight * 0.45);
+  } catch (err) {
+    console.warn('Particle error:', err);
+  }
 
   // Bắn sự kiện để EmailJS (hoặc analytics) ghi nhận người dùng đã mở thư
-  window.dispatchEvent(new CustomEvent('envelopeOpened'));
+  try {
+    window.dispatchEvent(new CustomEvent('envelopeOpened'));
+  } catch (err) {
+    console.warn('Event error:', err);
+  }
 
   // Mở ra trang nhật ký và lá thư tay
   setTimeout(() => {
@@ -315,7 +335,7 @@ function renderLetterContent() {
 // --------------------------------------------------------------------------
 // 6. KHỞI TẠO
 // --------------------------------------------------------------------------
-document.addEventListener('DOMContentLoaded', () => {
+function init() {
   // Nạp nội dung bức thư bằng JavaScript
   renderLetterContent();
 
@@ -329,21 +349,31 @@ document.addEventListener('DOMContentLoaded', () => {
   const peekingCat = document.getElementById('peekingCat');
 
   if (envelopeBox) {
-    envelopeBox.addEventListener('click', openEnvelope);
+    envelopeBox.onclick = openEnvelope;
   }
 
   if (waxSeal) {
-    waxSeal.addEventListener('click', (e) => {
+    waxSeal.onclick = (e) => {
       e.stopPropagation();
-      openEnvelope();
-    });
+      openEnvelope(e);
+    };
   }
 
   if (peekingCat) {
-    peekingCat.addEventListener('click', openEnvelope);
+    peekingCat.onclick = openEnvelope;
   }
 
   initAmbientCanvas();
 
   console.log('🌸 Trang Nhật ký & Thư tay sạch đẹp đã sẵn sàng!');
-});
+}
+
+// Gắn trực tiếp vào window để hỗ trợ cả onclick inline và module scope
+window.openEnvelope = openEnvelope;
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  // Nếu DOM đã sẵn sàng (hoặc trong in-app browser như Zalo/Messenger), khởi chạy ngay lập tức
+  init();
+}
